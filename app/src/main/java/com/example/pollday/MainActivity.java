@@ -1,11 +1,24 @@
 package com.example.pollday;
 
+import android.app.ProgressDialog;
+import android.content.Intent;
 import android.os.Bundle;
 
+import com.android.volley.AuthFailureError;
+import com.android.volley.DefaultRetryPolicy;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.RetryPolicy;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
 import com.google.android.material.snackbar.Snackbar;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.text.Editable;
 import android.view.View;
 
 import androidx.core.view.WindowCompat;
@@ -18,9 +31,17 @@ import com.example.pollday.databinding.ActivityMainBinding;
 
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Button;
+import android.widget.EditText;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
 
+    EditText etName, etPhone, etAddress;
+    Button btnInsert;
+    ProgressDialog progressDialog;
     private AppBarConfiguration appBarConfiguration;
     private ActivityMainBinding binding;
 
@@ -31,48 +52,54 @@ public class MainActivity extends AppCompatActivity {
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        setSupportActionBar(binding.toolbar);
+        etName = findViewById(R.id.et_student_id);
+        etAddress = findViewById(R.id.et_address_id);
+        etPhone = findViewById(R.id.et_phone_no);
+        btnInsert = findViewById(R.id.btn_insert_id);
 
-        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
-        appBarConfiguration = new AppBarConfiguration.Builder(navController.getGraph()).build();
-        NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
+        progressDialog = new ProgressDialog(MainActivity.this);
+        progressDialog.setMessage("Loading....");
 
-        binding.fab.setOnClickListener(new View.OnClickListener() {
+        btnInsert.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAnchorView(R.id.fab)
-                        .setAction("Action", null).show();
+                addStudentData();
+                progressDialog.show();
             }
         });
     }
+    public void addStudentData() {
+        String sName = etName.getText().toString();
+        String sPhone = etPhone.getText().toString();
+        String sAddress = etAddress.getText().toString();
+        StringRequest stringRequest = new StringRequest(Request.Method.POST, "https://script.google.com/macros/s/AKfycbyD0T-c7efnb26hpsMvfO-EXrk1Og-OsuJN04SOZEh-vG492a1GhHVbr8KlnnkvDUAtmw/exec", new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+                Intent intent = new Intent(getApplicationContext(), activity_success.class);
+                startActivity(intent);
+                progressDialog.hide();
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
+            }
+        }){
+            @Override
+            protected Map<String, String> getParams() {
+                Map<String, String> params = new HashMap<>();
+                params.put("action", "addStudent");
+                params.put("vName", sName);
+                params.put("vPhone", sPhone);
+                params.put("vAddress", sAddress);
+                return params;
+            }
+        };
+            int socketTimeOut = 50000;
+            RetryPolicy retryPolicy = new DefaultRetryPolicy(socketTimeOut, 0, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT);
+            stringRequest.setRetryPolicy(retryPolicy);
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
+            RequestQueue requestQueue = Volley.newRequestQueue(this);
+            requestQueue.add(stringRequest);
         }
-
-        return super.onOptionsItemSelected(item);
-    }
-
-    @Override
-    public boolean onSupportNavigateUp() {
-        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
-        return NavigationUI.navigateUp(navController, appBarConfiguration)
-                || super.onSupportNavigateUp();
-    }
 }
