@@ -31,14 +31,21 @@ import com.example.pollday.databinding.ActivityMainBinding;
 
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
 
+    String[] item = {"04-Premnagar", "05-Bhatgaon", "06-Pratappur"};
+    AutoCompleteTextView autoCompleteTextView;
+    ArrayAdapter<String> adapterItem;
     EditText etName, etPhone, etAddress;
     Button btnInsert;
     ProgressDialog progressDialog;
@@ -51,6 +58,18 @@ public class MainActivity extends AppCompatActivity {
 
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
+
+        autoCompleteTextView = findViewById(R.id.auto_complete_txt);
+        adapterItem = new ArrayAdapter<>(this, R.layout.list_item, item);
+        autoCompleteTextView.setAdapter(adapterItem);
+
+        autoCompleteTextView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                String item = adapterView.getItemAtPosition(i).toString();
+                Toast.makeText(MainActivity.this, "Item: "+ item,Toast.LENGTH_SHORT).show();
+            }
+        });
 
         etName = findViewById(R.id.et_student_id);
         etAddress = findViewById(R.id.et_address_id);
@@ -68,6 +87,8 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
+
+
     public void addStudentData() {
         String sName = etName.getText().toString();
         String sPhone = etPhone.getText().toString();
